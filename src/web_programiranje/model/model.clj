@@ -8,15 +8,18 @@
 
 (defrecord stat-type [id name])
 
-(defrecord game [id name external-info description creator strategies players])
+(defrecord game [id name externalInfo description creator strategies players])
 
-(defrecord player [id name payoffs playable-strategies])
+(defrecord game-info [id name externalInfo description creatorUsername])
 
-(defrecord payoff [id amount played-strategy opposing-strategy])
+(defrecord player [id name payoffs playableStrategies])
+
+(defrecord payoff [id amount playedStrategy opposingStrategy])
 
 (defrecord strategy [id name])
 
-(defrecord user [id first-name last-name username password country date-of-birth is-account-non-locked is-credentials-non-expired is-enabled is-account-non-expired])
+(defrecord user [id firstName lastName username password country dateOfBirth isAccountNonLocked isCredentialsNonExpired isEnabled isAccountNonExpired])
+
 
 
 (def attack (->stat-type 1 "ATTACK"))

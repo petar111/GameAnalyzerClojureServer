@@ -3,7 +3,7 @@
             [toucan.hydrate :as hydr]
             [web-programiranje.db.model.db-model :as model]
             [web-programiranje.db.config.db-config :as db-config]))
-
+;includes applying database configuration!!!!!!!!!
 (db-config/inital-configurantion)
 
 (defn all-creatures [] (model/Creature))
@@ -39,4 +39,8 @@
      (assoc :strategies (db/select model/Strategy :game_id id))
      (assoc :players (get-players-by-game-id id))
      )
+  )
+
+(defn get-all-games []
+  (hydr/hydrate (model/Game) :user)
   )

@@ -5,18 +5,25 @@
             [cheshire.core :as chjson]
             [ring.middleware.json :as ring-json]
             [ring.util.response :as ring-response]
-            [web-programiranje.db.service.db-service :as db-service] ;includes applying database configuration
-            [web-programiranje.mapper.mapper :as dto-mapper]
+            [web-programiranje.service.game-service :as game-service]
+            [web-programiranje.service.auth-service :as auth-service]
             ))
 
+(defn make-response
+  "docstring"
+  [response-dto]
+  (->(ring-response/response (chjson/generate-string response-dto))
+     (ring-response/header  "Content-type" "application/json")
+     )
+  )
 
 (defroutes app-routes
            (GET "/" request (str request))
            (GET "/test" [] (ring-response/response {:ana "ana" :bara 1}))
-           (GET "/user/:id{[0-9]+}" [id] (str "argument " id))
-           (GET "/game/:id{[0-9]+}" [id] (chjson/generate-string
-                                           (dto-mapper/to-game-dto
-                                             (db-service/get-game-by-id id))))
+           (GET "/user/:username" [username] (make-response (auth-service/get-user-by-username username)))
+           (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))
+           (GET "/game/all" [] (make-response (game-service/get-all-games)))
+           (POST "/login" request (make-response (auth-service/login (:body request))))
            (route/not-found "Not Found")
            )
 

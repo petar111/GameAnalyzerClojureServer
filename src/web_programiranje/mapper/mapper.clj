@@ -76,4 +76,20 @@
                     )
   )
 
+(defn to-game-info-dto
+  "docstring"
+  [game]
+  (dto-model/->game-info (:id game)
+                         (:name game)
+                         (:external_info game)
+                         (:description game)
+                         (:username (:user game))
+                    )
+  )
+
+(defn to-game-info-list-dto
+  "docstring"
+  [games]
+  (map #(to-game-info-dto %) games)
+  )
 
