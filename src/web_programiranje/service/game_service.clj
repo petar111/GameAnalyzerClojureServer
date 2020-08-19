@@ -16,3 +16,7 @@
   (dto-mapper/to-game-dto
     (db-service/get-game-by-id id))
   )
+
+(defn insert [game]
+  (db-service/execute-transaction (db-service/insert-game game))
+  )

@@ -45,6 +45,7 @@
            (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))
            (GET "/game/all" [] (make-response (game-service/get-all-games)))
            (POST "/login" request (handle-login (:body request)))
+           (POST "/game/insert" request (game-service/insert (:body request)))
            (route/not-found "Not Found")
            )
 
@@ -53,6 +54,6 @@
       (wrap-defaults api-defaults)
       (ring-json/wrap-json-response)
       (ring-json/wrap-json-body {:keywords? true :bigdecimals? true})
-      (ring-cors/wrap-cors :access-control-allow-origin #"http://localhost:4200" :access-control-expose-headers ["Jwt-token"] :access-control-allow-methods [:get :post])
+      (ring-cors/wrap-cors :access-control-allow-origin #"http://localhost:4200" :access-control-expose-headers ["Jwt-token" "Content-type"] :access-control-allow-methods [:get :post])
       )
   )
