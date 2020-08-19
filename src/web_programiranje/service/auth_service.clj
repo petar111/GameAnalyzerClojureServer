@@ -1,6 +1,7 @@
 (ns web-programiranje.service.auth-service
   (:require [web-programiranje.db.service.db-service :as db-service] ;includes applying database configuration
-            [web-programiranje.mapper.mapper :as dto-mapper]))
+            [web-programiranje.mapper.mapper :as dto-mapper]
+            [bcrypt-clj.auth :as bcrypt_encoder]))
 
 
 (defn get-user-by-username
@@ -10,24 +11,28 @@
   )
 
 (defn login-failed-username []
-  {:message "Login failed. Check your username"}
+  {:signal "LOGIN_FAILED_USERNAME"}
   )
 
-(defn login-success []
-  {:message "Login was successful."}
+(defn login-success [user]
+  {:signal "LOGIN_SUCCESS" :user (dto-mapper/to-user-dto user)}
   )
 
 (defn login-failed-password []
-  {:message "Login failed. Check your password"}
+  {:signal "LOGIN_FAILED_PASSWORD"}
   )
 
 (defn login [login-request]
-  (let [user (first (get-user-by-username (:username login-request)))]
+  (let [user (db-service/get-user-by-username (:username login-request))]
+    (println (:password login-request))
+    (println (:password user))
     (if (= user nil)
       (login-failed-username)
-      (if (= (:password user) (:password login-request))
-        (login-success)
-        (login-failed-password)
+      (let [encoded-password (subs (:password user) 8)]      ;subs because in database password has perfix {bcrypt}
+        (if (bcrypt_encoder/check-password (:password login-request) encoded-password)
+          (login-success user)
+          (login-failed-password)
+          )
         )
       )
     )
