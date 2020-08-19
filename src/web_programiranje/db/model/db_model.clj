@@ -35,6 +35,6 @@
 
 (models/defmodel GameSession :game_session)
 
-(models/defmodel GameSessionPlayer :game_session)
+(models/defmodel GameSessionPlayer :game_session_player)
 
-(models/defmodel GameSessionPlayerStrategy :game_session)
+(models/defmodel GameSessionPlayerStrategy :game_session_player_strategy)

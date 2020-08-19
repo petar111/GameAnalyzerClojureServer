@@ -76,9 +76,9 @@
   )
 
 (defn- insert-payoff [payoff player strategies]
-  (db/insert! model/Payoff {:amount (:amount payoff),
-                            :player_id (:id player),
-                            :strategy_id (:id (first (filter #(= (:name %) (:name (:playedStrategy payoff))) strategies))),
+  (db/insert! model/Payoff {:amount               (:amount payoff),
+                            :player_id            (:id player),
+                            :strategy_id          (:id (first (filter #(= (:name %) (:name (:playedStrategy payoff))) strategies))),
                             :opposing_strategy_id (:id (first (filter #(= (:name %) (:name (:opposingStrategy payoff))) strategies)))
                             })
   )
@@ -88,16 +88,67 @@
                                            :description   (:description game),
                                            :external_info (:externalInfo game),
                                            :user_id       (:id (:creator game))})]
-    (let [strategies (insert-strategies (:strategies game) (:id saved-game))
-          players (insert-players (:players game) (:id saved-game))]
-      (for [player players]
-        (loop [payoff (:payoffs player)]
-          (when (seq payoff)
-            (insert-payoff (first payoff) player strategies)
-            (recur (rest payoff))
-            )
-          )
-      )
-      )
+    (assoc saved-game :saved-players (let [strategies (insert-strategies (:strategies game) (:id saved-game))
+                                           players (insert-players (:players game) (:id saved-game))]
+                                       (for [player players]
+                                         (assoc player :saved-payoffs (loop [payoff (:payoffs player) result []]
+                                                                        (if (seq payoff)
+                                                                          (recur (rest payoff) (conj result (insert-payoff (first payoff) player strategies)))
+                                                                          result
+                                                                          )
+                                                                        ))
+                                         )
+                                       ))
+    )
   )
+
+(defn find-game-by-name [name]
+  (let [game  (first (db/select model/Game :name name))]
+    (get-game-by-id (:id game))
+    )
   )
+
+(defn- get-player-by-id [id]
+  (assoc
+    (model/Player id)
+    :payoffs
+    (hydr/hydrate (db/select model/Payoff :player_id id) :strategy :opposing_strategy)
+    )
+  )
+
+(defn- get-game-session-players-by-game-session-id [game-session-id]
+  (map #(assoc
+          % :played_strategies
+            (hydr/hydrate (db/select model/GameSessionPlayerStrategy :game_session_player_id (:id %)) :strategy)
+          ) (map #(assoc % :player (get-player-by-id (:player_id %))) (hydr/hydrate (db/select model/GameSessionPlayer :game_session_id game-session-id) :selected_strategy))
+       )
+  )
+
+(defn get-game-session-by-id [id]
+  (let [result (hydr/hydrate (model/GameSession id) :user)]
+    (assoc
+      (assoc result :players (get-game-session-players-by-game-session-id id))
+      :game
+      (get-game-by-id (:game_id result)))
+    )
+  )
+
+
+;(defn- get-players-by-game-id [game_id]
+;  (map
+;    #(assoc
+;       %
+;       :payoffs
+;       (hydr/hydrate (db/select model/Payoff :player_id (:id %)) :strategy :opposing_strategy)
+;       )
+;    (db/select model/Player :game_id game_id)
+;    )
+;  )
+;
+;
+;(defn get-game-by-id [id]
+;  (-> (hydr/hydrate (model/Game id) :user)
+;      (assoc :strategies (db/select model/Strategy :game_id id))
+;      (assoc :players (get-players-by-game-id id))
+;      )
+;  )

@@ -11,6 +11,9 @@
             [web-programiranje.security.jwt-token-provider :as jwt-token-provider]
             ))
 
+(def cors-exposed-headers ["Jwt-token" "Content-type"])
+(def cors-allowed-methods [:get :post])
+
 (defn make-response
   "docstring"
   [response-dto]
@@ -45,7 +48,9 @@
            (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))
            (GET "/game/all" [] (make-response (game-service/get-all-games)))
            (POST "/login" request (handle-login (:body request)))
-           (POST "/game/insert" request (game-service/insert (:body request)))
+           (POST "/game/insert" request (make-response (game-service/insert (:body request))))
+           (GET "/game/get" [name] (make-response (game-service/get-by-name name)))
+           (GET "/game/game-session/:id" [id] (make-response (game-service/get-game-session-by-id id)))
            (route/not-found "Not Found")
            )
 
@@ -54,6 +59,6 @@
       (wrap-defaults api-defaults)
       (ring-json/wrap-json-response)
       (ring-json/wrap-json-body {:keywords? true :bigdecimals? true})
-      (ring-cors/wrap-cors :access-control-allow-origin #"http://localhost:4200" :access-control-expose-headers ["Jwt-token" "Content-type"] :access-control-allow-methods [:get :post])
+      (ring-cors/wrap-cors :access-control-allow-origin #"http://localhost:4200" :access-control-expose-headers cors-exposed-headers :access-control-allow-methods cors-allowed-methods)
       )
   )

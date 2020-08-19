@@ -93,3 +93,46 @@
   (map #(to-game-info-dto %) games)
   )
 
+
+(defn to-game-session-player-strategy-dto
+  "docstring"
+  [game-session-player-strategy]
+  (dto-model/->game-session-player-strategy (:id game-session-player-strategy)
+                                            (:times_played game-session-player-strategy)
+                                            (to-strategy-dto (:strategy game-session-player-strategy)))
+  )
+
+
+(defn to-game-session-player-strategy-list-dto
+  "docstring"
+  [strategies]
+  (map #(to-game-session-player-strategy-dto %) strategies)
+  )
+
+(defn to-game-session-player-dto
+  "docstring"
+  [game-session-player]
+  (dto-model/->game-session-player (:id game-session-player)
+                                   (to-player-dto (:player game-session-player))
+                                   (:total_payoff game-session-player)
+                                   (to-strategy-dto (:selected_strategy game-session-player))
+                                   (to-game-session-player-strategy-list-dto (:played_strategies game-session-player))
+                                   (:player_label game-session-player))
+  )
+
+(defn to-game-session-player-list-dto
+  "docstring"
+  [players]
+  (map #(to-game-session-player-dto %) players)
+  )
+
+(defn to-game-session-dto
+  "docstring"
+  [game-session]
+  (dto-model/->game-session (:id game-session)
+                            (to-user-dto (:user game-session))
+                            (:number_of_rounds game-session)
+                            (to-game-dto (:game game-session))
+                            (to-game-session-player-list-dto (:players game-session))
+                            )
+  )
