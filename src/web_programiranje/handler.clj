@@ -51,6 +51,7 @@
            (POST "/game/insert" request (make-response (game-service/insert (:body request))))
            (GET "/game/get" [name] (make-response (game-service/get-by-name name)))
            (GET "/game/game-session/:id" [id] (make-response (game-service/get-game-session-by-id id)))
+           (POST "/game/game-session/save" request (make-response (game-service/save-game-session (:body request))))
            (route/not-found "Not Found")
            )
 

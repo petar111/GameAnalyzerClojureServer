@@ -33,3 +33,28 @@
 (defn get-game-session-by-id [id]
   (dto-mapper/to-game-session-dto (db-service/get-game-session-by-id id))
   )
+
+(defn insert-game-session [game-session]
+  (let [saved-game-session (db-service/execute-transaction (db-service/insert-game-session game-session))]
+    (if (empty? (:saved_players saved-game-session))
+      {:message (str "Error. Game session not saved")}
+      (dto-mapper/to-game-session-dto (db-service/get-game-session-by-id (:id saved-game-session)))
+      )
+    )
+  )
+
+(defn update-game-session [game-session]
+  (let [saved-game-session (db-service/execute-transaction (db-service/update-game-session game-session))]
+    (if saved-game-session
+      (dto-mapper/to-game-session-dto (db-service/get-game-session-by-id (:id game-session)))
+      {:message (str "Error. Game session not saved")}
+      )
+    )
+  )
+
+(defn save-game-session [game-session]
+  (if (nil? (:id game-session))
+    (insert-game-session game-session)
+    (update-game-session game-session)
+    )
+  )

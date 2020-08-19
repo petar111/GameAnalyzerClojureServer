@@ -103,7 +103,7 @@
   )
 
 (defn find-game-by-name [name]
-  (let [game  (first (db/select model/Game :name name))]
+  (let [game (first (db/select model/Game :name name))]
     (get-game-by-id (:id game))
     )
   )
@@ -120,7 +120,7 @@
   (map #(assoc
           % :played_strategies
             (hydr/hydrate (db/select model/GameSessionPlayerStrategy :game_session_player_id (:id %)) :strategy)
-          ) (map #(assoc % :player (get-player-by-id (:player_id %))) (hydr/hydrate (db/select model/GameSessionPlayer :game_session_id game-session-id) :selected_strategy))
+            ) (map #(assoc % :player (get-player-by-id (:player_id %))) (hydr/hydrate (db/select model/GameSessionPlayer :game_session_id game-session-id) :selected_strategy))
        )
   )
 
@@ -133,6 +133,86 @@
     )
   )
 
+(defn- insert-game-session-player-strategies [game-session-player-strategies game-session-player-id]
+  (loop [strategy game-session-player-strategies result []]
+    (if (seq strategy)
+      (let [curr-strategy (first strategy)]
+        (recur (rest strategy) (conj result (db/insert! model/GameSessionPlayerStrategy {
+                                                                                         :times_played           (:timesPlayed curr-strategy),
+                                                                                         :game_session_player_id game-session-player-id,
+                                                                                         :strategy_id            (:id (:strategy curr-strategy))
+                                                                                         })))
+        )
+      result
+      )
+    )
+  )
+
+(defn- insert-game-session-players [game-session-players game-session-id]
+  (loop [players game-session-players result []]
+    (if (seq players)
+      (let [saved-player (db/insert! model/GameSessionPlayer {:game_session_id      game-session-id,
+                                                              :player_id            (:id (:player (first players))),
+                                                              :player_label         (:playerLabel (first players)),
+                                                              :total_payoff         (:totalPayoff (first players)),
+                                                              :selected_strategy_id (:id (:selectedStrategy (first players)))
+                                                              })]
+        (recur (rest players) (conj result (assoc saved-player :saved_played_strategies (insert-game-session-player-strategies (:playedStrategies (first players)) (:id saved-player)))))
+        )
+      result
+      )
+    )
+  )
+
+(defn insert-game-session
+  "docstring"
+  [game-session]
+  (let [saved-game-session (db/insert! model/GameSession {
+                                                          :number_of_rounds (:numberOfRounds game-session),
+                                                          :user_id          (:id (:creator game-session)),
+                                                          :game_id          (:id (:game game-session))
+                                                          })]
+    (assoc saved-game-session :saved_players (insert-game-session-players (:players game-session) (:id saved-game-session)))
+    )
+  )
+
+(defn- update-game-session-player-strategies [game-session-player-strategies]
+  (loop [strategy game-session-player-strategies result []]
+    (if (seq strategy)
+      (let [curr-strategy (first strategy)]
+        (recur (rest strategy) (conj result (db/update! model/GameSessionPlayerStrategy (:id curr-strategy) {
+                                                                                                        :times_played (:timesPlayed curr-strategy)
+                                                                                                        })))
+        )
+      (empty? (filter #(= % false) result))
+      )
+    )
+  )
+
+(defn- update-game-session-players [game-session-players]
+  (loop [players game-session-players result []]
+    (if (seq players)
+      (let [saved-player (db/update! model/GameSessionPlayer (:id (first players)) {
+                                                                                    :player_label         (:playerLabel (first players)),
+                                                                                    :total_payoff         (:totalPayoff (first players)),
+                                                                                    :selected_strategy_id (:id (:selectedStrategy (first players)))
+                                                                                    })]
+        (recur (rest players) (conj result (update-game-session-player-strategies (:playedStrategies (first players))) ))
+        )
+      (empty? (filter #(= % false) result))
+      )
+    )
+  )
+
+(defn update-game-session
+  "docstring"
+  [game-session]
+  (let [saved-game-session (db/update! model/GameSession (:id game-session) {
+                                                                             :number_of_rounds (:numberOfRounds game-session)
+                                                                             })]
+    (and saved-game-session (update-game-session-players (:players game-session)))
+    )
+  )
 
 ;(defn- get-players-by-game-id [game_id]
 ;  (map
