@@ -28,6 +28,8 @@
 
 (defrecord game-session-player-strategy [id timesPlayed strategy])
 
+(defrecord game-advice-data [nashEquilibria])
+
 (def attack (->stat-type 1 "ATTACK"))
 (def slash (->stat 1 "Slash" attack))
 (def power-stat-slash (->power-stat 1 slash 44.0))

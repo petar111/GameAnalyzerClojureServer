@@ -81,7 +81,6 @@
 
 (defn- get-dominant-payoffs-for-player [game player-name opp-player-name]
   (loop [strategy (:playableStrategies (first (filter #(= (:name %) opp-player-name) (:players game)))) result []]
-    (println (filter-player-payoffs-by-opposing-strategy game player-name (first strategy))  )
     (if (seq strategy)
       (recur (rest strategy) (concat result (filter #(= (:amount %) (max-amount (filter-player-payoffs-by-opposing-strategy game player-name (first strategy)) )) (filter-player-payoffs-by-opposing-strategy game player-name (first strategy)) ) ))
       result
@@ -91,7 +90,6 @@
 
 (defn- get-nash-equilibria [game]
   (loop [dominant-payoff (get-dominant-payoffs-for-player game "Player1" "Player2") result []]
-    (println (first dominant-payoff))
     (if (seq dominant-payoff)
       (recur (rest dominant-payoff) (concat result (filter #(and (= (:id (:playedStrategy %)) (:id (:opposingStrategy (first dominant-payoff)))) (= (:id (:opposingStrategy %)) (:id (:playedStrategy (first dominant-payoff)))) ) (get-dominant-payoffs-for-player game "Player2" "Player1") ) ))
       result
@@ -100,6 +98,12 @@
   )
 
 (defn get-game-advice-by-id [id]
-  (get-nash-equilibria (dto-mapper/to-payoff-list-dto
-                          (db-service/get-game-by-id id)))
+  (dto-mapper/to-game-advice-data-dto
+    (-> {}
+        (assoc :nash-equilbria (get-nash-equilibria (dto-mapper/to-game-dto
+                                                         (db-service/get-game-by-id id))))
+        )
+
+    )
+
   )

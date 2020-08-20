@@ -152,3 +152,8 @@
   (map #(to-game-session-info-dto %) game-sessions)
   )
 
+(defn to-game-advice-data-dto
+  "docstring"
+  [game-advice-data]
+  (dto-model/->game-advice-data (:nash-equilbria game-advice-data))
+  )
