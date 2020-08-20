@@ -37,3 +37,28 @@
       )
     )
   )
+
+(defn registration-failure [message]
+  {:signal "FALIURE", :message message}
+  )
+
+(defn registration-success [saved-user]
+  {:signal "SUCCESS" :message "User is saved." :user (dto-mapper/to-user-dto saved-user)}
+  )
+
+(defn register-user [user]
+  (if (nil? (db-service/get-user-by-username (:username user)))
+    (if (nil? (db-service/get-user-by-email (:email user)))
+      (let [saved-user (db-service/insert-user
+                         (assoc user :password (str "{bcrypt}" (bcrypt_encoder/crypt-password (:password user)) ))
+                         )]
+        (if (nil? (:id saved-user))
+          (registration-failure "User is not saved")
+          (registration-success saved-user)
+          )
+        )
+      (registration-failure (str "Email " (:email user) " is taken"))
+      )
+    (registration-failure (str "Username " (:username user) " is taken"))
+    )
+  )

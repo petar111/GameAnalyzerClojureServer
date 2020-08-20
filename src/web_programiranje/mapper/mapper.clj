@@ -52,6 +52,7 @@
                     (:first_name user)
                     (:last_name user)
                     (:username user)
+                    (:email user)
                     nil
                     (:country user)
                     (:date_of_birth user)

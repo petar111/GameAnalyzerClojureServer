@@ -2,7 +2,9 @@
   (:require [toucan.db :as db]
             [toucan.hydrate :as hydr]
             [web-programiranje.db.model.db-model :as model]
-            [web-programiranje.db.config.db-config :as db-config]))
+            [web-programiranje.db.config.db-config :as db-config])
+  (:import (java.util Date)
+           (java.time LocalDateTime ZonedDateTime)))
 ;includes applying database configuration!!!!!!!!!
 (db-config/inital-configurantion)
 
@@ -19,6 +21,10 @@
 
 (defn get-user-by-username [username]
   (first (db/select model/User :username username))
+  )
+
+(defn get-user-by-email [email]
+  (first (db/select model/User :email email))
   )
 
 
@@ -182,8 +188,8 @@
     (if (seq strategy)
       (let [curr-strategy (first strategy)]
         (recur (rest strategy) (conj result (db/update! model/GameSessionPlayerStrategy (:id curr-strategy) {
-                                                                                                        :times_played (:timesPlayed curr-strategy)
-                                                                                                        })))
+                                                                                                             :times_played (:timesPlayed curr-strategy)
+                                                                                                             })))
         )
       (empty? (filter #(= % false) result))
       )
@@ -198,7 +204,7 @@
                                                                                     :total_payoff         (:totalPayoff (first players)),
                                                                                     :selected_strategy_id (:id (:selectedStrategy (first players)))
                                                                                     })]
-        (recur (rest players) (conj result (update-game-session-player-strategies (:playedStrategies (first players))) ))
+        (recur (rest players) (conj result (update-game-session-player-strategies (:playedStrategies (first players)))))
         )
       (empty? (filter #(= % false) result))
       )
@@ -217,6 +223,22 @@
 
 (defn get-game-session-by-creator-username [username]
   (hydr/hydrate (db/select model/GameSession :user_id (:id (get-user-by-username username))) :game)
+  )
+
+(defn insert-user [user]
+  (db/insert! model/User {
+                          :first_name                 (:firstName user),
+                          :last_name                  (:lastName user),
+                          :country                    (:country user),
+                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse "1995-06-21T22:00:00Z"))),
+                          :username                   (:username user),
+                          :email                      (:email user),
+                          :password                   (:password user),
+                          :is_account_non_expired     (Boolean. true),
+                          :is_account_non_locked      (Boolean. true),
+                          :is_enabled                 (Boolean. true),
+                          :is_credentials_non_expired (Boolean. true),
+                          })
   )
 
 ;(defn- get-players-by-game-id [game_id]
