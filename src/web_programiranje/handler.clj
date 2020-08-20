@@ -44,6 +44,7 @@
 (defroutes app-routes
            (GET "/" request (str request))
            (GET "/user/:username" [username] (make-response (auth-service/get-user-by-username username)))
+           (GET "/game/:id/advice" [id] (make-response (game-service/get-game-advice-by-id id)))
            (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))
            (GET "/game/all" [] (make-response (game-service/get-all-games)))
            (POST "/login" request (handle-login (:body request)))
