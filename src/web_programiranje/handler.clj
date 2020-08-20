@@ -8,6 +8,7 @@
             [ring.middleware.cors :as ring-cors]
             [web-programiranje.service.game-service :as game-service]
             [web-programiranje.service.auth-service :as auth-service]
+            [web-programiranje.service.user-service :as user-service]
             [web-programiranje.security.jwt-token-provider :as jwt-token-provider]
             ))
 
@@ -43,7 +44,8 @@
 
 (defroutes app-routes
            (GET "/" request (str request))
-           ;(GET "/user/:username" [username] (make-response (auth-service/get-user-by-username username)))
+           (GET "/user/:id/followers" [id] (make-response (user-service/get-user-followers-usernames-by-user-id id)))
+           (GET "/user/:id/following" [id] (make-response (user-service/get-user-following-usernames-by-user-id id)))
            (POST "/user/register" request (make-response (auth-service/register-user (:body request))))
            (GET "/game/:id/advice" [id] (make-response (game-service/get-game-advice-by-id id)))
            (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))

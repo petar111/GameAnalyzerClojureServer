@@ -63,6 +63,12 @@
                     )
   )
 
+(defn to-user-list-dto
+  "docstring"
+  [users]
+  (map #(to-user-dto %) users)
+  )
+
 
 (defn to-game-dto
   "docstring"

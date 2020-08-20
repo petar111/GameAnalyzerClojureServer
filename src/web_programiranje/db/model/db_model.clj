@@ -38,3 +38,5 @@
 (models/defmodel GameSessionPlayer :game_session_player)
 
 (models/defmodel GameSessionPlayerStrategy :game_session_player_strategy)
+
+(models/defmodel UserFollowing :user_following)

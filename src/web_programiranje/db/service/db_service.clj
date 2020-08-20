@@ -241,6 +241,25 @@
                           })
   )
 
+(defn get-user-followers-usernames-by-user-id [user_id]
+  (let [followers-ids (map :user_id (db/select [model/UserFollowing :user_id] :user_following_id user_id ))]
+    (if (seq followers-ids)
+      (map :username (db/select [model/User :username] :id [:in followers-ids]))
+      '()
+      )
+    )
+  )
+
+(defn get-user-following-usernames-by-user-id [user_id]
+  (let [following-ids (map :user_following_id (db/select [model/UserFollowing :user_following_id] :user_id user_id ))]
+    (if (seq following-ids)
+      (map :username (db/select [model/User :username] :id [:in following-ids]))
+      '()
+      )
+    )
+
+  )
+
 ;(defn- get-players-by-game-id [game_id]
 ;  (map
 ;    #(assoc
