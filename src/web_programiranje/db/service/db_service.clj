@@ -41,6 +41,7 @@
       )
   )
 
+
 (defn get-all-games []
   (hydr/hydrate (model/Game) :user)
   )
@@ -212,6 +213,10 @@
                                                                              })]
     (and saved-game-session (update-game-session-players (:players game-session)))
     )
+  )
+
+(defn get-game-session-by-creator-username [username]
+  (hydr/hydrate (db/select model/GameSession :user_id (:id (get-user-by-username username))) :game)
   )
 
 ;(defn- get-players-by-game-id [game_id]

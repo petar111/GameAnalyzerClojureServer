@@ -58,3 +58,8 @@
     (update-game-session game-session)
     )
   )
+
+(defn get-game-session-infos-by-creator-username [username]
+  (println username)
+  (dto-mapper/to-game-session-info-list-dto (db-service/get-game-session-by-creator-username username))
+  )

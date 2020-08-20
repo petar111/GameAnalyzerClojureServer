@@ -136,3 +136,19 @@
                             (to-game-session-player-list-dto (:players game-session))
                             )
   )
+
+(defn to-game-session-info-dto
+  "docstring"
+  [game-session]
+  (dto-model/->game-session-info (:id game-session)
+                            (:number_of_rounds game-session)
+                            (to-game-info-dto (:game game-session))
+                            )
+  )
+
+(defn to-game-session-info-list-dto
+  "docstring"
+  [game-sessions]
+  (map #(to-game-session-info-dto %) game-sessions)
+  )
+

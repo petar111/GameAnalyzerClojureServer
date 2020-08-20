@@ -22,6 +22,8 @@
 
 (defrecord game-session [id creator numberOfRounds game players])
 
+(defrecord game-session-info [id numberOfRounds game])
+
 (defrecord game-session-player [id player totalPayoff selectedStrategy playedStrategies playerLabel])
 
 (defrecord game-session-player-strategy [id timesPlayed strategy])

@@ -43,13 +43,13 @@
 
 (defroutes app-routes
            (GET "/" request (str request))
-           (GET "/test" [] (ring-response/response {:ana "ana" :bara 1}))
            (GET "/user/:username" [username] (make-response (auth-service/get-user-by-username username)))
            (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))
            (GET "/game/all" [] (make-response (game-service/get-all-games)))
            (POST "/login" request (handle-login (:body request)))
            (POST "/game/insert" request (make-response (game-service/insert (:body request))))
            (GET "/game/get" [name] (make-response (game-service/get-by-name name)))
+           (GET "/game/game-session/get-by-creator" [username] (make-response (game-service/get-game-session-infos-by-creator-username username))) ;this one and one under are somehow in conflict if i put this one under
            (GET "/game/game-session/:id" [id] (make-response (game-service/get-game-session-by-id id)))
            (POST "/game/game-session/save" request (make-response (game-service/save-game-session (:body request))))
            (route/not-found "Not Found")
