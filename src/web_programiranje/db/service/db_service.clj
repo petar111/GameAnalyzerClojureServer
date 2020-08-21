@@ -17,7 +17,7 @@
 
 (defn all-strategies [] (model/Strategy))
 
-(defn get-user-by-id [id] (model/User id))
+(defn get-user-by-id [id] (hydr/hydrate (model/User id) :rank))
 
 (defn get-user-by-username [username]
   (first (db/select model/User :username username))
@@ -230,7 +230,7 @@
                           :first_name                 (:firstName user),
                           :last_name                  (:lastName user),
                           :country                    (:country user),
-                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse "1995-06-21T22:00:00Z"))),
+                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse (:dateOfBirth user)))),
                           :username                   (:username user),
                           :email                      (:email user),
                           :password                   (:password user),
@@ -238,6 +238,7 @@
                           :is_account_non_locked      (Boolean. true),
                           :is_enabled                 (Boolean. true),
                           :is_credentials_non_expired (Boolean. true),
+                          :experience 0
                           })
   )
 
@@ -265,7 +266,7 @@
                           :first_name                 (:firstName user),
                           :last_name                  (:lastName user),
                           :country                    (:country user),
-                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse "1995-06-21T22:00:00Z"))),
+                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse (:dateOfBirth user) ))),
                           :username                   (:username user),
                           :email                      (:email user),
                           :password                   (:password user),
@@ -274,6 +275,54 @@
                           :is_enabled                 (:isEnabled user),
                           :is_credentials_non_expired (:isCredentialsNonExpired user),
                           })
+  )
+
+(defn get-game-score-by-id
+  "docstring"
+  [id]
+  (hydr/hydrate (model/GameScore id) [:game :user] :user)
+  )
+
+(defn get-all-game-score-by-game-id [game_id]
+    (hydr/hydrate (db/select model/GameScore :game_id game_id) [:game :user] :user)
+  )
+
+(defn get-all-game-score-by-user-id [user_id]
+  (hydr/hydrate (db/select model/GameScore :user_id user_id) [:game :user] :user)
+  )
+
+(defn get-all-game-score-by-user-id-and-game-id [user_id game_id]
+  (hydr/hydrate (db/select model/GameScore :user_id user_id :game_id game_id) [:game :user] :user)
+  )
+
+(defn insert-game-score [game-score]
+  (db/insert! model/GameScore {
+                               :total_payoff (:totalPayoff game-score),
+                               :number_of_rounds (:numberOfRounds game-score),
+                               :user_id (:id (:user game-score)),
+                               :game_id (:id (:game game-score)),
+                               :date_created (Date.)
+                               })
+  )
+
+(defn get-top-game-scores-by-number-of-rounds-and-game-id [number_of_rounds game_id number_of_top]
+  (db/select model/GameScore :number_of_rounds number_of_rounds :game_id game_id {:limit number_of_top :order-by [[:total_payoff :desc]]})
+  )
+
+(defn update-user-experience [user experience]
+  (db/update! model/User (:id user) {
+                                     :experience (+ experience (:experience user))
+                                     })
+  )
+
+(defn get-rank-by-experience [experience]
+  (first (db/select model/Rank :experience_max [:>= experience] :experience_min [:<= experience] ))
+  )
+
+(defn update-user-rank [user_id rank_id]
+  (db/update! model/User user_id {
+                                     :rank_id rank_id
+                                     })
   )
 
 ;(defn- get-players-by-game-id [game_id]

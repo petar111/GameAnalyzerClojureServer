@@ -14,3 +14,34 @@
   [user_id]
   (db-service/get-user-following-usernames-by-user-id user_id)
   )
+
+(defn promote-user [user rank]
+  (if (db-service/update-user-rank (:id user) (:id rank))
+    (db-service/get-user-by-id (:id user))
+    user
+    )
+  )
+
+(defn get-rank-for-experience [experience]
+  (db-service/get-rank-by-experience experience)
+  )
+
+(defn ready-for-promotion? [user]
+    (let [user-db (db-service/get-user-by-id (:id user))]
+      (> (:experience user-db) (:experience_max (:rank user-db)))
+      )
+  )
+
+(defn update-user-experience
+  "docstring"
+  [user experience]
+  (if (db-service/update-user-experience (db-service/get-user-by-id (:id user)) experience)
+    (let [saved-user (db-service/get-user-by-id (:id user))]
+      (if (ready-for-promotion? saved-user)
+        {:signal "SUCCESS" :message "User is updated and promoted." :user (dto-mapper/to-user-dto (promote-user saved-user (get-rank-for-experience (:experience saved-user))))}
+        {:signal "SUCCESS" :message "User is updated" :user (dto-mapper/to-user-dto saved-user)}
+        )
+      )
+    {:signal "FAIL" :message "Server error. User is not updated."}
+    )
+  )

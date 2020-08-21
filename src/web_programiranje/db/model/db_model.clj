@@ -40,3 +40,9 @@
 (models/defmodel GameSessionPlayerStrategy :game_session_player_strategy)
 
 (models/defmodel UserFollowing :user_following)
+
+(models/defmodel GameScore :game_score)
+
+(models/defmodel Rank :rank
+                 models/IModel
+                 (hydration-keys [_] [:rank]))

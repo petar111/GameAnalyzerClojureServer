@@ -12,7 +12,8 @@
                  [mysql/mysql-connector-java "5.1.6"]
                  [clj-jwt "0.1.1"]
                  [bcrypt-clj "0.3.3"]
-                 [ring-cors "0.1.13"]]
+                 [ring-cors "0.1.13"]
+                 [org.clojure/math.numeric-tower "0.0.4"]]
   :plugins [[lein-ring "0.12.5"]]
   :ring {:handler web-programiranje.handler/app}
   :profiles

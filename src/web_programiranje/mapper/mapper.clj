@@ -60,6 +60,8 @@
                     (:is_credentials_non_expired user)
                     (:is_enabled user)
                     (:is_account_non_expired user)
+                    (:experience user),
+                    (:name (:rank user))
                     )
   )
 
@@ -163,4 +165,22 @@
   "docstring"
   [game-advice-data]
   (dto-model/->game-advice-data (:nash-equilbria game-advice-data))
+  )
+
+(defn to-game-score-dto
+  "docstring"
+  [game-score]
+  (dto-model/->game-score (:id game-score)
+                          (:total_payoff game-score)
+                          (:number_of_rounds game-score)
+                          (to-game-info-dto (:game game-score))
+                          (:username (:user game-score))
+                          (:date_created game-score)
+                          )
+  )
+
+(defn to-game-score-list-dto
+  "docstring"
+  [game-scores]
+  (map #(to-game-score-dto %) game-scores)
   )
