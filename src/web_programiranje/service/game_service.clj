@@ -167,7 +167,7 @@
   (let [saved-game-score (db-service/insert-game-score game-score)]
     (if (nil? (:id saved-game-score))
       {:signal "FAIL" :message "Game score not saved"}
-      {:signal "SUCCESS" :message "Game score is saved" :experience (calculate-experience saved-game-score (:id (:player game-score)))}
+      {:signal "SUCCESS" :message (str "Game score is saved. You earned " (calculate-experience saved-game-score (:id (:player game-score))) " new experience.") :experience (calculate-experience saved-game-score (:id (:player game-score)))}
       )
     )
   )

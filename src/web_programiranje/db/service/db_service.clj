@@ -20,7 +20,7 @@
 (defn get-user-by-id [id] (hydr/hydrate (model/User id) :rank))
 
 (defn get-user-by-username [username]
-  (first (db/select model/User :username username))
+  (first (hydr/hydrate (db/select model/User :username username) :rank))
   )
 
 (defn get-user-by-email [email]

@@ -38,8 +38,8 @@
   (if (db-service/update-user-experience (db-service/get-user-by-id (:id user)) experience)
     (let [saved-user (db-service/get-user-by-id (:id user))]
       (if (ready-for-promotion? saved-user)
-        {:signal "SUCCESS" :message "User is updated and promoted." :user (dto-mapper/to-user-dto (promote-user saved-user (get-rank-for-experience (:experience saved-user))))}
-        {:signal "SUCCESS" :message "User is updated" :user (dto-mapper/to-user-dto saved-user)}
+        {:signal "SUCCESS" :message "You are promoted!." :user (dto-mapper/to-user-dto (promote-user saved-user (get-rank-for-experience (:experience saved-user))))}
+        {:signal "SUCCESS" :message "Your new experience is saved." :user (dto-mapper/to-user-dto saved-user)}
         )
       )
     {:signal "FAIL" :message "Server error. User is not updated."}
