@@ -22,7 +22,7 @@
      )
   )
 
-(defn make-response-login [dto-response jwt-token]
+(defn make-response-with-authentication [dto-response jwt-token]
   (-> (make-response dto-response)
       (ring-response/header "Jwt-token" jwt-token)
       )
@@ -35,9 +35,22 @@
   (let [login-signal (auth-service/login login-request)]
     (if (= (:signal login-signal) "LOGIN_SUCCESS")
       (let [jwt-token (jwt-token-provider/generate-jwt-token (assoc jwt-token-provider/claim :sub (:username (:user login-signal))))]
-        (make-response-login (:user login-signal) jwt-token)
+        (make-response-with-authentication (:user login-signal) jwt-token)
         )
       (make-response login-signal)
+      )
+    )
+  )
+
+(defn handle-register
+  "docstring"
+  [user]
+  (let [register-signal (auth-service/register-user user)]
+    (if (= (:signal register-signal) "SUCCESS")
+      (let [jwt-token (jwt-token-provider/generate-jwt-token (assoc jwt-token-provider/claim :sub (:username (:user register-signal))))]
+        (make-response-with-authentication (:user register-signal) jwt-token)
+        )
+      (make-response register-signal)
       )
     )
   )
@@ -46,7 +59,7 @@
            (GET "/" request (str request))
            (GET "/user/:id/followers" [id] (make-response (user-service/get-user-followers-usernames-by-user-id id)))
            (GET "/user/:id/following" [id] (make-response (user-service/get-user-following-usernames-by-user-id id)))
-           (POST "/user/register" request (make-response (auth-service/register-user (:body request))))
+           (POST "/register" request (handle-register (:body request)))
            (POST "/user/update" request (make-response (auth-service/update-user (:body request))))
            (POST "/user/update/experience" request (make-response (user-service/update-user-experience (:user (:body request)) (:experience (:body request)))))
            (GET "/game/:id/advice" [id] (make-response (game-service/get-game-advice-by-id id)))

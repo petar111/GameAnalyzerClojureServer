@@ -4,7 +4,8 @@
             [web-programiranje.db.model.db-model :as model]
             [web-programiranje.db.config.db-config :as db-config])
   (:import (java.util Date)
-           (java.time LocalDateTime ZonedDateTime)))
+           (java.time LocalDateTime ZonedDateTime)
+           (java.text SimpleDateFormat)))
 ;includes applying database configuration!!!!!!!!!
 (db-config/inital-configurantion)
 
@@ -230,7 +231,7 @@
                           :first_name                 (:firstName user),
                           :last_name                  (:lastName user),
                           :country                    (:country user),
-                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse (:dateOfBirth user)))),
+                          :date_of_birth              (.parse (SimpleDateFormat. "yyyy-MM-dd") (:dateOfBirth user)),
                           :username                   (:username user),
                           :email                      (:email user),
                           :password                   (:password user),
@@ -263,18 +264,18 @@
 
 (defn update-user [user]
   (db/update! model/User (:id user) {
-                          :first_name                 (:firstName user),
-                          :last_name                  (:lastName user),
-                          :country                    (:country user),
-                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse (:dateOfBirth user) ))),
-                          :username                   (:username user),
-                          :email                      (:email user),
-                          :password                   (:password user),
-                          :is_account_non_expired     (:isAccountNonExpired user),
-                          :is_account_non_locked      (:isAccountNonLocked user),
-                          :is_enabled                 (:isEnabled user),
-                          :is_credentials_non_expired (:isCredentialsNonExpired user),
-                          })
+                                     :first_name                 (:firstName user),
+                                     :last_name                  (:lastName user),
+                                     :country                    (:country user),
+                                     :date_of_birth              (.parse (SimpleDateFormat. "yyyy-MM-dd") (:dateOfBirth user)),
+                                     :username                   (:username user),
+                                     :email                      (:email user),
+                                     :password                   (:password user),
+                                     :is_account_non_expired     (:isAccountNonExpired user),
+                                     :is_account_non_locked      (:isAccountNonLocked user),
+                                     :is_enabled                 (:isEnabled user),
+                                     :is_credentials_non_expired (:isCredentialsNonExpired user),
+                                     })
   )
 
 (defn get-game-score-by-id
@@ -323,6 +324,12 @@
   (db/update! model/User user_id {
                                      :rank_id rank_id
                                      })
+  )
+
+(defn get-rank-by-id
+  "docstring"
+  [id]
+  (model/Rank id)
   )
 
 ;(defn- get-players-by-game-id [game_id]

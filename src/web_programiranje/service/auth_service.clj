@@ -56,7 +56,7 @@
                          )]
         (if (nil? (:id saved-user))
           (registration-failure "User is not saved")
-          (registration-success saved-user)
+          (registration-success (assoc saved-user :rank (db-service/get-rank-by-id 1)))
           )
         )
       (registration-failure (str "Email " (:email user) " is taken"))
