@@ -47,6 +47,7 @@
            (GET "/user/:id/followers" [id] (make-response (user-service/get-user-followers-usernames-by-user-id id)))
            (GET "/user/:id/following" [id] (make-response (user-service/get-user-following-usernames-by-user-id id)))
            (POST "/user/register" request (make-response (auth-service/register-user (:body request))))
+           (POST "/user/update" request (make-response (auth-service/update-user (:body request))))
            (GET "/game/:id/advice" [id] (make-response (game-service/get-game-advice-by-id id)))
            (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))
            (GET "/game/all" [] (make-response (game-service/get-all-games)))

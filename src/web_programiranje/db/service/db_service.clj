@@ -260,6 +260,22 @@
 
   )
 
+(defn update-user [user]
+  (db/update! model/User (:id user) {
+                          :first_name                 (:firstName user),
+                          :last_name                  (:lastName user),
+                          :country                    (:country user),
+                          :date_of_birth              (Date/from (.toInstant (ZonedDateTime/parse "1995-06-21T22:00:00Z"))),
+                          :username                   (:username user),
+                          :email                      (:email user),
+                          :password                   (:password user),
+                          :is_account_non_expired     (:isAccountNonExpired user),
+                          :is_account_non_locked      (:isAccountNonLocked user),
+                          :is_enabled                 (:isEnabled user),
+                          :is_credentials_non_expired (:isCredentialsNonExpired user),
+                          })
+  )
+
 ;(defn- get-players-by-game-id [game_id]
 ;  (map
 ;    #(assoc
