@@ -77,7 +77,7 @@
       (if (db-service/update-user
             (assoc user :password (str "{bcrypt}" (bcrypt_encoder/crypt-password (:password user)) ))
             )
-        (update-response "SUCCESS" "User is updated.")
+        (dto-mapper/to-user-dto (db-service/get-user-by-id (:id user)))
         (update-response "FAIL" "User is not updated.")
         )
       (update-response "FAIL" (str "Email " (:email user) " is taken"))
