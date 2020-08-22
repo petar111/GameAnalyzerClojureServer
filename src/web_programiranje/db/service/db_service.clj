@@ -239,7 +239,8 @@
                           :is_account_non_locked      (Boolean. true),
                           :is_enabled                 (Boolean. true),
                           :is_credentials_non_expired (Boolean. true),
-                          :experience 0
+                          :experience 0,
+                          :rank_id 1
                           })
   )
 

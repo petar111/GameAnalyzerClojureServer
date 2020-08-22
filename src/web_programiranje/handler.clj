@@ -55,24 +55,39 @@
     )
   )
 
+(defn make-error-response [exception status]
+  (-> (ring-response/response (.getMessage exception))
+      (ring-response/status status))
+  )
+
+(defn handle-request
+  "docstring"
+  [handle]
+  (try
+    (make-response (handle))
+    (catch Exception e (make-error-response e 400))
+    )
+  )
+
+
 (defroutes app-routes
            (GET "/" request (str request))
-           (GET "/user/:id/followers" [id] (make-response (user-service/get-user-followers-usernames-by-user-id id)))
-           (GET "/user/:id/following" [id] (make-response (user-service/get-user-following-usernames-by-user-id id)))
+           (GET "/user/:id/followers" [id] (handle-request (partial user-service/get-user-followers-usernames-by-user-id id)))
+           (GET "/user/:id/following" [id] (handle-request (partial user-service/get-user-following-usernames-by-user-id id)))
            (POST "/register" request (handle-register (:body request)))
-           (POST "/user/update" request (make-response (auth-service/update-user (:body request))))
-           (POST "/user/update/experience" request (make-response (user-service/update-user-experience (:user (:body request)) (:experience (:body request)))))
-           (GET "/game/:id/advice" [id] (make-response (game-service/get-game-advice-by-id id)))
-           (GET "/game/:id{[0-9]+}" [id] (make-response (game-service/get-game-by-id id)))
-           (GET "/game/score/get" [user_id game_id] (make-response (game-service/get-game-scores user_id game_id)))
-           (POST "/game/score/submit" request (make-response (game-service/insert-game-score (:body request))))
-           (GET "/game/all" [] (make-response (game-service/get-all-games)))
+           (POST "/user/update" request (handle-request (partial auth-service/update-user (:body request))))
+           (POST "/user/update/experience" request  (handle-request (partial user-service/update-user-experience (:user (:body request)) (:experience (:body request)))))
+           (GET "/game/:id/advice" [id] (handle-request (partial game-service/get-game-advice-by-id id)))
+           (GET "/game/:id{[0-9]+}" [id] (handle-request (partial game-service/get-game-by-id id)))
+           (GET "/game/score/get" [user_id game_id] (handle-request (partial game-service/get-game-scores user_id game_id)))
+           (POST "/game/score/submit" request (handle-request (partial game-service/insert-game-score (:body request))))
+           (GET "/game/all" [] (handle-request (partial game-service/get-all-games)))
            (POST "/login" request (handle-login (:body request)))
-           (POST "/game/insert" request (make-response (game-service/insert (:body request))))
-           (GET "/game/get" [name] (make-response (game-service/get-by-name name)))
-           (GET "/game/game-session/get-by-creator" [username] (make-response (game-service/get-game-session-infos-by-creator-username username))) ;this one and one under are somehow in conflict if i put this one under
-           (GET "/game/game-session/:id" [id] (make-response (game-service/get-game-session-by-id id)))
-           (POST "/game/game-session/save" request (make-response (game-service/save-game-session (:body request))))
+           (POST "/game/insert" request (handle-request (partial game-service/insert (:body request))))
+           (GET "/game/get" [name] (handle-request (partial game-service/get-by-name name)))
+           (GET "/game/game-session/get-by-creator" [username] (handle-request (partial game-service/get-game-session-infos-by-creator-username username))) ;this one and one under are somehow in conflict if i put this one under
+           (GET "/game/game-session/:id" [id] (handle-request (partial game-service/get-game-session-by-id id)))
+           (POST "/game/game-session/save" request (handle-request (partial game-service/save-game-session (:body request))))
            (route/not-found "Not Found")
            )
 
