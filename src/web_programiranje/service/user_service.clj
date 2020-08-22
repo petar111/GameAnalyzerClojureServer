@@ -45,3 +45,9 @@
     {:signal "FAIL" :message "Server error. User is not updated."}
     )
   )
+
+(defn get-user-by-id
+  "docstring"
+  [id]
+  (dto-mapper/to-user-dto (db-service/get-user-by-id id))
+  )

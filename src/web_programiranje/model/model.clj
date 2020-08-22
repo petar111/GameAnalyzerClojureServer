@@ -18,7 +18,9 @@
 
 (defrecord strategy [id name])
 
-(defrecord user [id firstName lastName username email password country dateOfBirth isAccountNonLocked isCredentialsNonExpired isEnabled isAccountNonExpired experience rankName])
+(defrecord user [id firstName lastName username email password country dateOfBirth
+                 isAccountNonLocked isCredentialsNonExpired isEnabled isAccountNonExpired experience rankName
+                 followersCount followingCount])
 
 (defrecord game-session [id creator numberOfRounds game players])
 

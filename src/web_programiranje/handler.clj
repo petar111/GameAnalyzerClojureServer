@@ -28,37 +28,38 @@
       )
   )
 
+(defn make-error-response [exception status]
+  (-> (ring-response/response (.getMessage exception))
+      (ring-response/status status))
+  )
 
 
 
 (defn handle-login [login-request]
-  (let [login-signal (auth-service/login login-request)]
-    (if (= (:signal login-signal) "LOGIN_SUCCESS")
+  (try
+    (let [login-signal (auth-service/login login-request)]
       (let [jwt-token (jwt-token-provider/generate-jwt-token (assoc jwt-token-provider/claim :sub (:username (:user login-signal))))]
         (make-response-with-authentication (:user login-signal) jwt-token)
         )
-      (make-response login-signal)
       )
+    (catch Exception e (make-error-response e 401))
     )
   )
 
 (defn handle-register
   "docstring"
   [user]
-  (let [register-signal (auth-service/register-user user)]
-    (if (= (:signal register-signal) "SUCCESS")
+  (try
+    (let [register-signal (auth-service/register-user user)]
       (let [jwt-token (jwt-token-provider/generate-jwt-token (assoc jwt-token-provider/claim :sub (:username (:user register-signal))))]
         (make-response-with-authentication (:user register-signal) jwt-token)
         )
-      (make-response register-signal)
       )
+    (catch Exception e (make-error-response e 401))
     )
   )
 
-(defn make-error-response [exception status]
-  (-> (ring-response/response (.getMessage exception))
-      (ring-response/status status))
-  )
+
 
 (defn handle-request
   "docstring"
@@ -72,6 +73,7 @@
 
 (defroutes app-routes
            (GET "/" request (str request))
+           (GET "/user/:id" [id] (handle-request (partial user-service/get-user-by-id id)))
            (GET "/user/:id/followers" [id] (handle-request (partial user-service/get-user-followers-usernames-by-user-id id)))
            (GET "/user/:id/following" [id] (handle-request (partial user-service/get-user-following-usernames-by-user-id id)))
            (POST "/register" request (handle-register (:body request)))

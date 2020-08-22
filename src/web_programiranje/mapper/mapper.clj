@@ -62,6 +62,8 @@
                     (:is_account_non_expired user)
                     (:experience user),
                     (:name (:rank user))
+                    (:followers_count user)
+                    (:following_count user)
                     )
   )
 

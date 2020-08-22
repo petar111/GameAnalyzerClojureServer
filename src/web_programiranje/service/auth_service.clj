@@ -24,14 +24,12 @@
 
 (defn login [login-request]
   (let [user (db-service/get-user-by-username (:username login-request))]
-    (println (:password login-request))
-    (println (:password user))
     (if (= user nil)
-      (login-failed-username)
+      (throw (Exception. (str "Username " (:user login-request) " does not exist")))
       (let [encoded-password (subs (:password user) 8)]      ;subs because in database password has perfix {bcrypt}
         (if (bcrypt_encoder/check-password (:password login-request) encoded-password)
           (login-success user)
-          (login-failed-password)
+          (throw (Exception. (str "Password is incorrect.")))
           )
         )
       )
@@ -55,13 +53,13 @@
                          (assoc user :password (str "{bcrypt}" (bcrypt_encoder/crypt-password (:password user)) ))
                          )]
         (if (nil? (:id saved-user))
-          (registration-failure "User is not saved")
+          (throw (Exception. "User is not saved."))
           (registration-success (assoc saved-user :rank (db-service/get-rank-by-id 1)))
           )
         )
-      (registration-failure (str "Email " (:email user) " is taken"))
+      (throw (Exception. (str "Email " (:email user) " is taken")))
       )
-    (registration-failure (str "Username " (:username user) " is taken"))
+    (throw (Exception. (str "Username " (:username user) " is taken")))
     )
   )
 
@@ -74,11 +72,15 @@
   [user]
   (if (or (nil? (db-service/get-user-by-username (:username user))) (= (:id (db-service/get-user-by-username (:username user))) (:id user)))
     (if (or (nil? (db-service/get-user-by-email (:email user))) (= (:id (db-service/get-user-by-email (:email user))) (:id user)))
-      (if (db-service/update-user
-            (assoc user :password (str "{bcrypt}" (bcrypt_encoder/crypt-password (:password user)) ))
-            )
-        (dto-mapper/to-user-dto (db-service/get-user-by-id (:id user)))
-        (Exception. (str "User is not saved."))
+      (if (db-service/update-user user)
+        (if (nil? (:password user))
+          (dto-mapper/to-user-dto (db-service/get-user-by-id (:id user)))
+            (if (db-service/update-user-password user (str "{bcrypt}" (bcrypt_encoder/crypt-password (:password user))))
+              (dto-mapper/to-user-dto (db-service/get-user-by-id (:id user)))
+              (throw (Exception. (str "User password is not saved.")))
+              )
+          )
+        (throw (Exception. (str "User is not saved.")))
         )
       (throw (Exception. (str "Email " (:email user) " is taken")))
       )

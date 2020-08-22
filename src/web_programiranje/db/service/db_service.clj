@@ -2,7 +2,9 @@
   (:require [toucan.db :as db]
             [toucan.hydrate :as hydr]
             [web-programiranje.db.model.db-model :as model]
-            [web-programiranje.db.config.db-config :as db-config])
+            [web-programiranje.db.config.db-config :as db-config]
+            [bcrypt-clj.auth :as encoder]
+            )
   (:import (java.util Date)
            (java.time LocalDateTime ZonedDateTime)
            (java.text SimpleDateFormat)))
@@ -18,14 +20,21 @@
 
 (defn all-strategies [] (model/Strategy))
 
-(defn get-user-by-id [id] (hydr/hydrate (model/User id) :rank))
+(defn enrich-user
+  "docstring"
+  [user]
+  (assoc user :followers_count (count (db/select model/UserFollowing :user_following_id (:id user)))
+              :following_count (count (db/select model/UserFollowing :user_id (:id user))))
+  )
+
+(defn get-user-by-id [id] (enrich-user (hydr/hydrate (model/User id) :rank)))
 
 (defn get-user-by-username [username]
-  (first (hydr/hydrate (db/select model/User :username username) :rank))
+  (enrich-user (first (hydr/hydrate (db/select model/User :username username) :rank)))
   )
 
 (defn get-user-by-email [email]
-  (first (db/select model/User :email email))
+  (enrich-user (first (hydr/hydrate (db/select model/User :email email) :rank)))
   )
 
 
@@ -239,13 +248,13 @@
                           :is_account_non_locked      (Boolean. true),
                           :is_enabled                 (Boolean. true),
                           :is_credentials_non_expired (Boolean. true),
-                          :experience 0,
-                          :rank_id 1
+                          :experience                 0,
+                          :rank_id                    1
                           })
   )
 
 (defn get-user-followers-usernames-by-user-id [user_id]
-  (let [followers-ids (map :user_id (db/select [model/UserFollowing :user_id] :user_following_id user_id ))]
+  (let [followers-ids (map :user_id (db/select [model/UserFollowing :user_id] :user_following_id user_id))]
     (if (seq followers-ids)
       (map :username (db/select [model/User :username] :id [:in followers-ids]))
       '()
@@ -254,7 +263,7 @@
   )
 
 (defn get-user-following-usernames-by-user-id [user_id]
-  (let [following-ids (map :user_following_id (db/select [model/UserFollowing :user_following_id] :user_id user_id ))]
+  (let [following-ids (map :user_following_id (db/select [model/UserFollowing :user_following_id] :user_id user_id))]
     (if (seq following-ids)
       (map :username (db/select [model/User :username] :id [:in following-ids]))
       '()
@@ -271,11 +280,18 @@
                                      :date_of_birth              (.parse (SimpleDateFormat. "yyyy-MM-dd") (:dateOfBirth user)),
                                      :username                   (:username user),
                                      :email                      (:email user),
-                                     :password                   (:password user),
                                      :is_account_non_expired     (:isAccountNonExpired user),
                                      :is_account_non_locked      (:isAccountNonLocked user),
                                      :is_enabled                 (:isEnabled user),
                                      :is_credentials_non_expired (:isCredentialsNonExpired user),
+                                     })
+  )
+
+(defn update-user-password
+  "docstring"
+  [user crypted_password_with_encoder_prefix]
+  (db/update! model/User (:id user) {
+                                     :password crypted_password_with_encoder_prefix
                                      })
   )
 
@@ -286,7 +302,7 @@
   )
 
 (defn get-all-game-score-by-game-id [game_id]
-    (hydr/hydrate (db/select model/GameScore :game_id game_id) [:game :user] :user)
+  (hydr/hydrate (db/select model/GameScore :game_id game_id) [:game :user] :user)
   )
 
 (defn get-all-game-score-by-user-id [user_id]
@@ -299,11 +315,11 @@
 
 (defn insert-game-score [game-score]
   (db/insert! model/GameScore {
-                               :total_payoff (:totalPayoff game-score),
+                               :total_payoff     (:totalPayoff game-score),
                                :number_of_rounds (:numberOfRounds game-score),
-                               :user_id (:id (:user game-score)),
-                               :game_id (:id (:game game-score)),
-                               :date_created (Date.)
+                               :user_id          (:id (:user game-score)),
+                               :game_id          (:id (:game game-score)),
+                               :date_created     (Date.)
                                })
   )
 
@@ -318,13 +334,13 @@
   )
 
 (defn get-rank-by-experience [experience]
-  (first (db/select model/Rank :experience_max [:>= experience] :experience_min [:<= experience] ))
+  (first (db/select model/Rank :experience_max [:>= experience] :experience_min [:<= experience]))
   )
 
 (defn update-user-rank [user_id rank_id]
   (db/update! model/User user_id {
-                                     :rank_id rank_id
-                                     })
+                                  :rank_id rank_id
+                                  })
   )
 
 (defn get-rank-by-id
