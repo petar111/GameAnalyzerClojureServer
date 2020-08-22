@@ -45,6 +45,15 @@
   (map #(to-player-dto %) players)
   )
 
+(defn to-rank-dto
+  "docstring"
+  [rank]
+  (dto-model/->rank (:id rank)
+                    (:name rank)
+                    (:experience_min rank)
+                    (:experience_max rank))
+  )
+
 (defn to-user-dto
   "docstring"
   [user]
@@ -60,8 +69,8 @@
                     (:is_credentials_non_expired user)
                     (:is_enabled user)
                     (:is_account_non_expired user)
-                    (:experience user),
-                    (:name (:rank user))
+                    (:experience user)
+                    (to-rank-dto (:rank user))
                     (:followers_count user)
                     (:following_count user)
                     )

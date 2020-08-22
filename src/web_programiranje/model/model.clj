@@ -19,7 +19,7 @@
 (defrecord strategy [id name])
 
 (defrecord user [id firstName lastName username email password country dateOfBirth
-                 isAccountNonLocked isCredentialsNonExpired isEnabled isAccountNonExpired experience rankName
+                 isAccountNonLocked isCredentialsNonExpired isEnabled isAccountNonExpired experience rank
                  followersCount followingCount])
 
 (defrecord game-session [id creator numberOfRounds game players])
@@ -33,6 +33,8 @@
 (defrecord game-advice-data [nashEquilibria])
 
 (defrecord game-score [id totalPayoff numberOfRounds game user dateCreated])
+
+(defrecord rank [id name experienceMin experienceMax])
 
 (def attack (->stat-type 1 "ATTACK"))
 (def slash (->stat 1 "Slash" attack))

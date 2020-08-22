@@ -12,7 +12,10 @@
             [web-programiranje.security.jwt-token-provider :as jwt-token-provider]
             ))
 
-(def cors-exposed-headers ["Jwt-token" "Content-type"])
+
+
+(def cors-exposed-headers ["Origin" "Content-Type" "Accept" "Jwt-Token" "Authorization"
+                           "Access-Control-Allow-Origin" "Access-Control-Allow-Credentials" "WWW-Authenticate"])
 (def cors-allowed-methods [:get :post])
 
 (defn make-response
@@ -28,8 +31,11 @@
       )
   )
 
+
+
 (defn make-error-response [exception status]
   (-> (ring-response/response (.getMessage exception))
+      (ring-response/header "WWW-Authenticate" "Jwt-token realm=\"Application for game analyzing\", charset=\"UTF-8\"")
       (ring-response/status status))
   )
 
