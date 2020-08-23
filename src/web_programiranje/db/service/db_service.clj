@@ -57,9 +57,13 @@
       )
   )
 
+(defn get-all-games-by-user-id [user_id]
+  (hydr/hydrate (db/select model/Game :user_id user_id) :user :verification_status)
+  )
+
 
 (defn get-all-games []
-  (hydr/hydrate (model/Game) :user)
+  (hydr/hydrate (model/Game) :user :verification_status)
   )
 
 (defn execute-transaction
@@ -360,6 +364,7 @@
                                         :number_of_verified_games (:number_of_verified_games creator)
                                         })
   )
+
 
 ;(defn- get-players-by-game-id [game_id]
 ;  (map

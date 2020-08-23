@@ -18,6 +18,10 @@
     (db-service/get-game-by-id id))
   )
 
+(defn- is-game-verified? [game-info]
+  (or (= (:name (:verification_status (db-service/get-game-by-id (:id game-info)))) "VERIFIED") (= (:name (:verification_status (db-service/get-game-by-id (:id game-info)))) "WILDCARD_VERIFIED"))
+  )
+
 (defn insert [game]
   (let [saved-game (db-service/execute-transaction (db-service/insert-game game))]
     (if (empty? (:saved-players saved-game))
@@ -167,7 +171,10 @@
   (let [saved-game-score (db-service/insert-game-score game-score)]
     (if (nil? (:id saved-game-score))
       {:signal "FAIL" :message "Game score not saved"}
-      {:signal "SUCCESS" :message (str "Game score is saved. You earned " (calculate-experience saved-game-score (:id (:player game-score))) " new experience.") :experience (calculate-experience saved-game-score (:id (:player game-score)))}
+      (if (is-game-verified? (:game game-score))
+        {:signal "SUCCESS" :message (str "Game score is saved. You earned " (calculate-experience saved-game-score (:id (:player game-score))) " new experience.") :experience (calculate-experience saved-game-score (:id (:player game-score)))}
+        {:signal "SUCCESS" :message "Game score is saved. Because it is not verified, you do not have experience from this game."}
+        )
       )
     )
   )
@@ -181,9 +188,7 @@
     )
   )
 
-(defn- is-game-verified? [game-info]
-  (= (:name (:verification_status (db-service/get-game-by-id (:id game-info)))) "VERIFIED")
-  )
+
 
 (defn request-verification
   "docstring"
@@ -205,4 +210,10 @@
         )
       )
     )
+  )
+
+(defn get-games-by-user-id
+  "docstring"
+  [user_id]
+  (dto-mapper/to-game-info-list-dto (db-service/get-all-games-by-user-id user_id))
   )
