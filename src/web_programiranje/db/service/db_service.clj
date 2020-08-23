@@ -51,7 +51,7 @@
 
 
 (defn get-game-by-id [id]
-  (-> (hydr/hydrate (model/Game id) :user)
+  (-> (hydr/hydrate (model/Game id) :user :verification_status)
       (assoc :strategies (db/select model/Strategy :game_id id))
       (assoc :players (get-players-by-game-id id))
       )
@@ -347,6 +347,18 @@
   "docstring"
   [id]
   (model/Rank id)
+  )
+
+(defn update-game-verification [game verification-status]
+  (db/update! model/Game (:id game) {
+                                     :verification_status_id (:id (first (db/select model/VerificationStatus :name verification-status)))
+                                     })
+  )
+
+(defn update-user-verified-games [creator]
+  (db/update! model/User (:id creator) {
+                                        :number_of_verified_games (:number_of_verified_games creator)
+                                        })
   )
 
 ;(defn- get-players-by-game-id [game_id]

@@ -8,9 +8,9 @@
 
 (defrecord stat-type [id name])
 
-(defrecord game [id name externalInfo description creator strategies players])
+(defrecord game [id name externalInfo description creator strategies players verificationStatus])
 
-(defrecord game-info [id name externalInfo description creatorUsername])
+(defrecord game-info [id name externalInfo description creatorUsername verificationStatus])
 
 (defrecord player [id name payoffs playableStrategies])
 
@@ -20,7 +20,7 @@
 
 (defrecord user [id firstName lastName username email password country dateOfBirth
                  isAccountNonLocked isCredentialsNonExpired isEnabled isAccountNonExpired experience rank
-                 followersCount followingCount])
+                 followersCount followingCount numberOfVerifiedGames])
 
 (defrecord game-session [id creator numberOfRounds game players])
 

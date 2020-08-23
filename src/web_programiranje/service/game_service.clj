@@ -171,3 +171,38 @@
       )
     )
   )
+
+(defn attempt-verification [creator game]
+  (let [verification-status (cond
+                              (< (:number_of_verified_games creator) (:verified_games_max (:rank creator))) "VERIFIED"
+                              (>= (:number_of_verified_games creator) (:verified_games_max (:rank creator))) "REJECTED"
+                              )]
+    {:signal verification-status :updated (db-service/update-game-verification game verification-status)}
+    )
+  )
+
+(defn- is-game-verified? [game-info]
+  (= (:name (:verification_status (db-service/get-game-by-id (:id game-info)))) "VERIFIED")
+  )
+
+(defn request-verification
+  "docstring"
+  [game-info]
+  (if (is-game-verified? game-info)
+    {:signal "GAME_ALREADY_VERIFIED" :game game-info}
+    (let [creator (db-service/get-user-by-username (:creatorUsername game-info))]
+      (let [verification-result (attempt-verification creator game-info)]
+        (if (not (:updated verification-result))
+          (throw (Exception. "Game verification is not updated."))
+          (case (:signal verification-result)
+            "VERIFIED" (if (db-service/update-user-verified-games (assoc creator :number_of_verified_games (+ 1 (:number_of_verified_games creator))))
+                         {:signal "GAME_VERIFIED" :game (dto-mapper/to-game-info-dto (db-service/get-game-by-id (:id game-info)))}
+                         (throw (Exception. "User number of verified games is not updated."))
+                         )
+            "REJECTED" {:signal "GAME_REJECTED" :game (dto-mapper/to-game-info-dto (db-service/get-game-by-id (:id game-info)))}
+            )
+          )
+        )
+      )
+    )
+  )

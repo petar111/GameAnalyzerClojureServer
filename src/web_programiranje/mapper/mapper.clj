@@ -73,6 +73,7 @@
                     (to-rank-dto (:rank user))
                     (:followers_count user)
                     (:following_count user)
+                    (:number_of_verified_games user)
                     )
   )
 
@@ -93,6 +94,7 @@
                     (to-user-dto (:user game))
                     (to-strategies-list-dto (:strategies game))
                     (to-player-list-dto (:players game))
+                    (:verification_status game)
                     )
   )
 
@@ -104,6 +106,7 @@
                          (:external_info game)
                          (:description game)
                          (:username (:user game))
+                         (:verification_status game)
                     )
   )
 

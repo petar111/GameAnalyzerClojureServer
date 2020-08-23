@@ -46,3 +46,7 @@
 (models/defmodel Rank :rank
                  models/IModel
                  (hydration-keys [_] [:rank]))
+
+(models/defmodel VerificationStatus :verification_status
+                 models/IModel
+                 (hydration-keys [_] [:verification_status]))

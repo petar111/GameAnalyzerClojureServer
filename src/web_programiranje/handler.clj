@@ -86,6 +86,7 @@
            (POST "/user/update" request (handle-request (partial auth-service/update-user (:body request))))
            (POST "/user/update/experience" request  (handle-request (partial user-service/update-user-experience (:user (:body request)) (:experience (:body request)))))
            (GET "/game/:id/advice" [id] (handle-request (partial game-service/get-game-advice-by-id id)))
+           (POST "/game/:id/request-verification" request (handle-request (partial game-service/request-verification (:body request))))
            (GET "/game/:id{[0-9]+}" [id] (handle-request (partial game-service/get-game-by-id id)))
            (GET "/game/score/get" [user_id game_id] (handle-request (partial game-service/get-game-scores user_id game_id)))
            (POST "/game/score/submit" request (handle-request (partial game-service/insert-game-score (:body request))))
