@@ -11,6 +11,25 @@
     (db-service/get-all-games))
   )
 
+(defn get-all-games
+  "docstring"
+  [page pageSize]
+  (dto-mapper/to-game-info-list-dto
+    (db-service/get-all-games-page page pageSize))
+  )
+
+(defn get-all-games-count
+  "docstring"
+  []
+  (db-service/get-all-games-count)
+  )
+
+(defn get-game-scores-by-date
+  "docstring"
+  [date amount]
+  (dto-mapper/to-game-score-list-dto (db-service/get-all-game-scores-by-date-created-and-limit date amount))
+  )
+
 (defn get-game-by-id
   "docstring"
   [id]
@@ -18,8 +37,8 @@
     (db-service/get-game-by-id id))
   )
 
-(defn- is-game-verified? [game-info]
-  (or (= (:name (:verification_status (db-service/get-game-by-id (:id game-info)))) "VERIFIED") (= (:name (:verification_status (db-service/get-game-by-id (:id game-info)))) "WILDCARD_VERIFIED"))
+(defn- is-game-verified? [game]
+  (or (= (:name (:verification_status game)) "VERIFIED") (= (:name (:verification_status game)) "WILDCARD_VERIFIED"))
   )
 
 (defn insert [game]
@@ -192,19 +211,19 @@
 
 (defn request-verification
   "docstring"
-  [game-info]
-  (if (is-game-verified? game-info)
-    {:signal "GAME_ALREADY_VERIFIED" :game game-info}
-    (let [creator (db-service/get-user-by-username (:creatorUsername game-info))]
-      (let [verification-result (attempt-verification creator game-info)]
+  [verification-request]
+  (let [game (db-service/get-game-by-id(:gameId verification-request)) user (db-service/get-user-by-id(:userId verification-request))]
+    (if (is-game-verified? game)
+      {:signal "GAME_ALREADY_VERIFIED" :message "Game is already verified" :game game :user (dto-mapper/to-user-dto user)}
+      (let [verification-result (attempt-verification user game)]
         (if (not (:updated verification-result))
           (throw (Exception. "Game verification is not updated."))
           (case (:signal verification-result)
-            "VERIFIED" (if (db-service/update-user-verified-games (assoc creator :number_of_verified_games (+ 1 (:number_of_verified_games creator))))
-                         {:signal "GAME_VERIFIED" :game (dto-mapper/to-game-info-dto (db-service/get-game-by-id (:id game-info)))}
+            "VERIFIED" (if (db-service/update-user-verified-games (assoc user :number_of_verified_games (+ 1 (:number_of_verified_games user))))
+                         {:signal "GAME_VERIFIED" :message "Game is verified" :game (dto-mapper/to-game-info-dto (db-service/get-game-by-id (:id game))) :user (dto-mapper/to-user-dto (assoc user :number_of_verified_games (+ 1 (:number_of_verified_games user))))}
                          (throw (Exception. "User number of verified games is not updated."))
                          )
-            "REJECTED" {:signal "GAME_REJECTED" :game (dto-mapper/to-game-info-dto (db-service/get-game-by-id (:id game-info)))}
+            "REJECTED" {:signal "GAME_REJECTED" :message "Game is rejected" :game (dto-mapper/to-game-info-dto (db-service/get-game-by-id (:id game))) :user (dto-mapper/to-user-dto user)}
             )
           )
         )

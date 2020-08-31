@@ -10,7 +10,8 @@
             [web-programiranje.service.auth-service :as auth-service]
             [web-programiranje.service.user-service :as user-service]
             [web-programiranje.security.jwt-token-provider :as jwt-token-provider]
-            ))
+            )
+  (:import (java.sql Date)))
 
 
 
@@ -34,6 +35,7 @@
 
 
 (defn make-error-response [exception status]
+  (.printStackTrace exception)
   (-> (ring-response/response (.getMessage exception))
       (ring-response/header "WWW-Authenticate" "Jwt-token realm=\"Application for game analyzing\", charset=\"UTF-8\"")
       (ring-response/status status))
@@ -89,11 +91,13 @@
            (POST "/user/update" request (handle-request (partial auth-service/update-user (:body request))))
            (POST "/user/update/experience" request  (handle-request (partial user-service/update-user-experience (:user (:body request)) (:experience (:body request)))))
            (GET "/game/:id/advice" [id] (handle-request (partial game-service/get-game-advice-by-id id)))
-           (POST "/game/:id/request-verification" request (handle-request (partial game-service/request-verification (:body request))))
+           (POST "/game/request-verification" request (handle-request (partial game-service/request-verification (:body request))))
            (GET "/game/:id{[0-9]+}" [id] (handle-request (partial game-service/get-game-by-id id)))
            (GET "/game/score/get" [user_id game_id] (handle-request (partial game-service/get-game-scores user_id game_id)))
+           (GET "/game/scores-today" [] (handle-request (partial game-service/get-game-scores-by-date (Date. (System/currentTimeMillis)) 5)))
            (POST "/game/score/submit" request (handle-request (partial game-service/insert-game-score (:body request))))
-           (GET "/game/all" [] (handle-request (partial game-service/get-all-games)))
+           (GET "/game/all" [page pageSize] (handle-request (partial game-service/get-all-games page pageSize)))
+           (GET "/game/all/count" [] (handle-request (partial game-service/get-all-games-count)))
            (POST "/login" request (handle-login (:body request)))
            (POST "/game/insert" request (handle-request (partial game-service/insert (:body request))))
            (GET "/game/get" [name] (handle-request (partial game-service/get-by-name name)))

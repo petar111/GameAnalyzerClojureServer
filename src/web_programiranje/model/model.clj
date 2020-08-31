@@ -20,7 +20,7 @@
 
 (defrecord user [id firstName lastName username email password country dateOfBirth
                  isAccountNonLocked isCredentialsNonExpired isEnabled isAccountNonExpired experience rank
-                 followersCount followingCount numberOfVerifiedGames])
+                 numberOfVerifiedGames])
 
 (defrecord game-session [id creator numberOfRounds game players])
 

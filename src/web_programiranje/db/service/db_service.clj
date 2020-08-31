@@ -18,6 +18,8 @@
 
 (defn all-games [] (model/Game))
 
+
+
 (defn all-strategies [] (model/Strategy))
 
 (defn enrich-user
@@ -64,6 +66,15 @@
 
 (defn get-all-games []
   (hydr/hydrate (model/Game) :user :verification_status)
+  )
+
+(defn get-all-games-page [page pageSize]
+  (hydr/hydrate (db/select model/Game {:limit (Integer/parseInt pageSize) :offset (* (Integer/parseInt page) (Integer/parseInt pageSize))}) :user :verification_status)
+  )
+
+(defn get-all-games-count []
+  (first (vals (first (db/query {:select [:%count.id]
+                                 :from   [:game]}))))
   )
 
 (defn execute-transaction
@@ -314,7 +325,7 @@
   )
 
 (defn get-all-game-score-by-user-id-and-game-id [user_id game_id]
-  (hydr/hydrate (db/select model/GameScore :user_id user_id :game_id game_id) [:game :user] :user)
+  (hydr/hydrate (db/select model/GameScore :user_id user_id :game_id game_id) [:game :verification_status :user] [:user :rank])
   )
 
 (defn insert-game-score [game-score]
@@ -372,6 +383,14 @@
 (defn get-user-following-count-by-user-id [user_id]
   (count (db/select model/UserFollowing :user_id user_id))
   )
+
+(defn get-all-game-scores-by-date-created-and-limit [date amount]
+  (hydr/hydrate (db/select model/GameScore :date_created date {:limit amount}) [:game :verification_status :user] [:user :rank] )
+  )
+
+
+
+
 
 
 ;(defn- get-players-by-game-id [game_id]
