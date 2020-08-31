@@ -365,6 +365,14 @@
                                         })
   )
 
+(defn get-user-followers-count-by-user-id [user_id]
+  (count (db/select model/UserFollowing :user_following_id user_id))
+  )
+
+(defn get-user-following-count-by-user-id [user_id]
+  (count (db/select model/UserFollowing :user_id user_id))
+  )
+
 
 ;(defn- get-players-by-game-id [game_id]
 ;  (map

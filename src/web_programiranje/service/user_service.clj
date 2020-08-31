@@ -51,3 +51,15 @@
   [id]
   (dto-mapper/to-user-dto (db-service/get-user-by-id id))
   )
+
+(defn get-followers-count-by-id
+  "docstring"
+  [user_id]
+  (db-service/get-user-followers-count-by-user-id user_id)
+  )
+
+(defn get-following-count-by-id
+  "docstring"
+  [user_id]
+  (db-service/get-user-following-count-by-user-id user_id)
+  )

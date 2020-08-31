@@ -82,6 +82,8 @@
            (GET "/user/:id" [id] (handle-request (partial user-service/get-user-by-id id)))
            (GET "/user/:id/followers" [id] (handle-request (partial user-service/get-user-followers-usernames-by-user-id id)))
            (GET "/user/:id/following" [id] (handle-request (partial user-service/get-user-following-usernames-by-user-id id)))
+           (GET "/user/:id/followers/count" [id] (handle-request (partial user-service/get-followers-count-by-id id)))
+           (GET "/user/:id/following/count" [id] (handle-request (partial user-service/get-following-count-by-id id)))
            (GET "/user/:id/games" [id] (handle-request (partial game-service/get-games-by-user-id id)))
            (POST "/register" request (handle-register (:body request)))
            (POST "/user/update" request (handle-request (partial auth-service/update-user (:body request))))
