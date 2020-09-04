@@ -32,11 +32,11 @@
 (defn get-user-by-id [id] (enrich-user (hydr/hydrate (model/User id) :rank)))
 
 (defn get-user-by-username [username]
-  (enrich-user (first (hydr/hydrate (db/select model/User :username username) :rank)))
+  (first (hydr/hydrate (db/select model/User :username username) :rank))
   )
 
 (defn get-user-by-email [email]
-  (enrich-user (first (hydr/hydrate (db/select model/User :email email) :rank)))
+  (first (hydr/hydrate (db/select model/User :email email) :rank))
   )
 
 
@@ -69,13 +69,10 @@
   )
 
 (defn get-all-games-page [page pageSize]
-  (hydr/hydrate (db/select model/Game {:limit (Integer/parseInt pageSize) :offset (* (Integer/parseInt page) (Integer/parseInt pageSize))}) :user :verification_status)
+  (hydr/hydrate (db/select model/Game {:limit (Integer/parseInt pageSize) :offset (* (Integer/parseInt page) (Integer/parseInt pageSize)) :order-by [:name]}) :user :verification_status)
   )
 
-(defn get-all-games-count []
-  (first (vals (first (db/query {:select [:%count.id]
-                                 :from   [:game]}))))
-  )
+
 
 (defn execute-transaction
   "docstring"
@@ -119,7 +116,8 @@
   (let [saved-game (db/insert! model/Game {:name          (:name game),
                                            :description   (:description game),
                                            :external_info (:externalInfo game),
-                                           :user_id       (:id (:creator game))})]
+                                           :user_id       (:id (:creator game))
+                                           :verification_status_id 1})]
     (assoc saved-game :saved-players (let [strategies (insert-strategies (:strategies game) (:id saved-game))
                                            players (insert-players (:players game) (:id saved-game))]
                                        (for [player players]
@@ -264,7 +262,8 @@
                           :is_enabled                 (Boolean. true),
                           :is_credentials_non_expired (Boolean. true),
                           :experience                 0,
-                          :rank_id                    1
+                          :rank_id                    1,
+                          :number_of_verified_games   0
                           })
   )
 
@@ -389,6 +388,32 @@
   )
 
 
+;DB-COUNT
+
+(defn get-all-games-count []
+  (first (vals (first (db/query {:select [:%count.id]
+                                 :from   [:game]}))))
+  )
+
+(defn get-game-session-by-creator-username-count [username]
+  (db/query {:select [:%count.id]
+             :from   [:game]})
+  )
+
+(defn insert-follow [user_id user_following_id]
+  (db/insert! model/UserFollowing {
+                                :user_id user_id,
+                                :user_following_id user_following_id
+                                })
+  )
+
+(defn get-user-following-unique [user_id user_following_id]
+  (first (db/select model/UserFollowing :user_id user_id :user_following_id user_following_id))
+  )
+
+(defn delete-follow [user_id user_following_id]
+  (db/delete! model/UserFollowing :user_id user_id :user_following_id user_following_id)
+  )
 
 
 

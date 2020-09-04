@@ -38,7 +38,8 @@
   )
 
 (defn- is-game-verified? [game]
-  (or (= (:name (:verification_status game)) "VERIFIED") (= (:name (:verification_status game)) "WILDCARD_VERIFIED"))
+  (or (= (:name (:verification_status game)) "VERIFIED") (= (:name (:verification_status game)) "WILDCARD_VERIFIED")
+      (= (:name (:verificationStatus game)) "VERIFIED") (= (:name (:verificationStatus game)) "WILDCARD_VERIFIED"))
   )
 
 (defn insert [game]
@@ -84,7 +85,6 @@
   )
 
 (defn get-game-session-infos-by-creator-username [username]
-  (println username)
   (dto-mapper/to-game-session-info-list-dto (db-service/get-game-session-by-creator-username username))
   )
 

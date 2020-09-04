@@ -63,3 +63,47 @@
   [user_id]
   (db-service/get-user-following-count-by-user-id user_id)
   )
+
+(defn get-user-by-username
+  "docstring"
+  [username]
+  (dto-mapper/to-user-dto (db-service/get-user-by-username username))
+  )
+
+(defn already-following? [followerId followingId]
+  (not (nil? (db-service/get-user-following-unique followerId followingId)))
+  )
+
+(defn follow-user
+  "docstring"
+  [follow-request]
+  (if (already-following? (:followerId follow-request) (:followingId follow-request))
+    (throw (Exception. "The user is already following."))
+    (let [saved-following (db-service/insert-follow (:followerId follow-request) (:followingId follow-request))]
+      (if (not (nil? saved-following))
+        {:signal "FOLLOWING_SAVED" :message "Following inserted"}
+        (throw (Exception. "Following is not saved."))
+        )
+      )
+    )
+  )
+
+(defn un-follow-user
+  "docstring"
+  [follow-request]
+  (if (already-following? (:followerId follow-request) (:followingId follow-request))
+    (let [deleted-following (db-service/delete-follow (:followerId follow-request) (:followingId follow-request))]
+      (if (nil? deleted-following)
+        {:signal "FOLLOWING_DELETED" :message "Following deleted"}
+        (throw (Exception. "Following is not deleted."))
+        )
+      )
+    (throw (Exception. "The user is not following."))
+    )
+  )
+
+(defn get-is-user-following
+  "docstring"
+  [followerId followingId]
+  (already-following? followerId followingId)
+  )

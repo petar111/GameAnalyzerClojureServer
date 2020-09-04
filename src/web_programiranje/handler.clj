@@ -41,7 +41,11 @@
       (ring-response/status status))
   )
 
-
+(defn make-authentication-failed-response [exception status]
+  (-> (ring-response/response (.getMessage exception))
+      (ring-response/header "WWW-Authenticate" "Jwt-token realm=\"Application for game analyzing\", charset=\"UTF-8\"")
+      (ring-response/status status))
+  )
 
 (defn handle-login [login-request]
   (try
@@ -69,41 +73,67 @@
 
 
 
-(defn handle-request
+(defn handle-request-deprecated
   "docstring"
   [handle]
   (try
+    (jwt-token-provider/validate-jwt-token "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJhdWQiOiJBdWRpZW5jZSBGSVhNRSIsInN1YiI6InBldGFyIiwiaXNzIjoiU0lVWCIsImV4cCI6MTU5OTI2NDI2NiwiaWF0IjoxNTk4ODMyMjY2LCJhdXRob3JpdGllcyI6W119.Fnip_-VYI_GpvSLfnu1nVimcz1HFfDPWEw0p2GfBc8XQNypaqXawh16Mq1C6y_oQSnZGpOSHjKdtikRowoxr1w")
     (make-response (handle))
     (catch Exception e (make-error-response e 400))
     )
   )
 
 
+
+(defn handle-request
+  "docstring"
+  [handle request]
+  (try
+    (let [token-validation (jwt-token-provider/validate-jwt-token (get (:headers request) "authorization"))]
+      (if (= (:signal token-validation) "OK")
+        (make-response (handle))
+        (throw (Exception. "Token validation failed."))
+        )
+      )
+    (catch Exception e
+      (if (.startsWith (.getMessage e) "Authentication failed.")
+        (make-authentication-failed-response e 401)
+        (make-error-response e 400)
+        )
+      )
+    )
+  )
+
+
 (defroutes app-routes
            (GET "/" request (str request))
-           (GET "/user/:id" [id] (handle-request (partial user-service/get-user-by-id id)))
-           (GET "/user/:id/followers" [id] (handle-request (partial user-service/get-user-followers-usernames-by-user-id id)))
-           (GET "/user/:id/following" [id] (handle-request (partial user-service/get-user-following-usernames-by-user-id id)))
-           (GET "/user/:id/followers/count" [id] (handle-request (partial user-service/get-followers-count-by-id id)))
-           (GET "/user/:id/following/count" [id] (handle-request (partial user-service/get-following-count-by-id id)))
-           (GET "/user/:id/games" [id] (handle-request (partial game-service/get-games-by-user-id id)))
+           (GET "/user/:id" request (handle-request (partial user-service/get-user-by-id (:id (:params request))) request))
+           (GET "/user/:id/followers" request (handle-request (partial user-service/get-user-followers-usernames-by-user-id (:id (:params request)) ) request))
+           (GET "/user/:id/following" request (handle-request (partial user-service/get-user-following-usernames-by-user-id (:id (:params request)) ) request))
+           (GET "/user/:id/followers/count" request (handle-request (partial user-service/get-followers-count-by-id (:id (:params request)) ) request))
+           (GET "/user/:id/following/count" request (handle-request (partial user-service/get-following-count-by-id (:id (:params request)) ) request))
+           (GET "/user/:id/games" request (handle-request (partial game-service/get-games-by-user-id (:id (:params request)) ) request))
+           (GET "/user/:id/is-following/:following" request (handle-request (partial user-service/get-is-user-following (:id (:params request)) (:following (:params request))) request))
+           (GET "/user/@/:username" request (handle-request (partial user-service/get-user-by-username (:username (:params request)) ) request))
+           (POST "/user/follow" request (handle-request (partial user-service/follow-user (:body request)) request))
+           (POST "/user/un-follow" request (handle-request (partial user-service/un-follow-user (:body request)) request))
            (POST "/register" request (handle-register (:body request)))
-           (POST "/user/update" request (handle-request (partial auth-service/update-user (:body request))))
-           (POST "/user/update/experience" request  (handle-request (partial user-service/update-user-experience (:user (:body request)) (:experience (:body request)))))
-           (GET "/game/:id/advice" [id] (handle-request (partial game-service/get-game-advice-by-id id)))
-           (POST "/game/request-verification" request (handle-request (partial game-service/request-verification (:body request))))
-           (GET "/game/:id{[0-9]+}" [id] (handle-request (partial game-service/get-game-by-id id)))
-           (GET "/game/score/get" [user_id game_id] (handle-request (partial game-service/get-game-scores user_id game_id)))
-           (GET "/game/scores-today" [] (handle-request (partial game-service/get-game-scores-by-date (Date. (System/currentTimeMillis)) 5)))
-           (POST "/game/score/submit" request (handle-request (partial game-service/insert-game-score (:body request))))
-           (GET "/game/all" [page pageSize] (handle-request (partial game-service/get-all-games page pageSize)))
-           (GET "/game/all/count" [] (handle-request (partial game-service/get-all-games-count)))
+           (POST "/user/update" request (handle-request (partial auth-service/update-user (:body request)) request))
+           (POST "/user/update/experience" request  (handle-request (partial user-service/update-user-experience (:user (:body request)) (:experience (:body request))) request))
+           (GET "/game/:id/advice" request (handle-request (partial game-service/get-game-advice-by-id (:id (:params request)) ) request))
+           (POST "/game/request-verification" request (handle-request (partial game-service/request-verification (:body request)) request))
+           (GET "/game/:id{[0-9]+}" request (handle-request (partial game-service/get-game-by-id (:id (:params request)) ) request))
+           (GET "/game/score/get" request (handle-request (partial game-service/get-game-scores (:user_id (:params request)) (:game_id (:params request)) ) request))
+           (GET "/game/scores-today" request (handle-request (partial game-service/get-game-scores-by-date (Date. (System/currentTimeMillis)) 5) request))
+           (POST "/game/score/submit" request (handle-request (partial game-service/insert-game-score (:body request)) request))
+           (GET "/game/all" request (handle-request (partial game-service/get-all-games (:page (:params request)) (:pageSize (:params request))) request))
+           (GET "/game/all/count" request (handle-request (partial game-service/get-all-games-count) request))
            (POST "/login" request (handle-login (:body request)))
-           (POST "/game/insert" request (handle-request (partial game-service/insert (:body request))))
-           (GET "/game/get" [name] (handle-request (partial game-service/get-by-name name)))
-           (GET "/game/game-session/get-by-creator" [username] (handle-request (partial game-service/get-game-session-infos-by-creator-username username))) ;this one and one under are somehow in conflict if i put this one under
-           (GET "/game/game-session/:id" [id] (handle-request (partial game-service/get-game-session-by-id id)))
-           (POST "/game/game-session/save" request (handle-request (partial game-service/save-game-session (:body request))))
+           (POST "/game/insert" request (handle-request (partial game-service/insert (:body request)) request))
+           (GET "/game/get" request (handle-request (partial game-service/get-by-name (:name (:params request))) request))
+           (GET "/game/game-session/get-by-creator" request (handle-request (partial game-service/get-game-session-infos-by-creator-username (:username (:params request))) request)) ;this one and one under are somehow in conflict if i put this one under
+           (GET "/game/game-session/:id" request (handle-request (partial game-service/get-game-session-by-id (:id (:params request)) ) request))
+           (POST "/game/game-session/save" request (handle-request (partial game-service/save-game-session (:body request)) request))
            (route/not-found "Not Found")
            )
 
